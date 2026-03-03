@@ -25,7 +25,7 @@
   --topbar-height: 56px;
 }
 
-/* === DARK PRO (Modifié pour un excellent contraste) === */
+/* === DARK PRO === */
 [data-theme="dark"] {
   --bg-base: #12161b;
   --bg-surface: #1a1f26;
@@ -36,8 +36,8 @@
   --border: #2c3440;
   --border-subtle: #222831;
   --border-accent: #3b82f6;
-  --text-primary: #f3f4f6; /* Blanc éclatant */
-  --text-secondary: #9ca3af; /* Gris clair */
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
   --text-muted: #6b7280;
   --accent: #3b82f6;
   --accent-glow: rgba(59, 130, 246, 0.2);
@@ -149,10 +149,30 @@ body { font-family: var(--font-body); background: var(--bg-base); color: var(--t
 /* DASHBOARD */
 .dashboard-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; margin: 20px; }
 .dc-title { font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 15px; }
+
+/* MODAL API KEY */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 9999; }
+.modal-overlay.active { display: flex; }
+.api-modal { background: var(--bg-surface); padding: 30px; border-radius: var(--radius-md); border: 1px solid var(--border-accent); width: 400px; max-width: 90%; }
+.api-btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: var(--radius-sm); cursor: pointer; font-weight: bold; margin-top: 15px; width: 100%; }
+.api-input { width: 100%; padding: 10px; background: var(--bg-elevated); border: 1px solid var(--border); color: white; border-radius: var(--radius-sm); margin-top: 10px; }
+.topbar-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 6px 10px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.78rem; font-family: var(--font-body); display: flex; align-items: center; gap: 5px; }
+.topbar-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-accent); }
 </style>
 </head>
 
 <body>
+<div class="modal-overlay" id="api-key-modal">
+  <div class="api-modal">
+    <h2 style="margin-bottom: 10px;">🔒 Sécurité API</h2>
+    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 15px;">
+      Pour protéger vos quotas, veuillez entrer votre clé API Twelve Data. Elle sera sauvegardée uniquement dans votre navigateur local.
+    </p>
+    <input type="text" id="api-key-input" class="api-input" placeholder="Collez votre clé API ici...">
+    <button class="api-btn" onclick="saveApiKey()">Enregistrer et commencer</button>
+  </div>
+</div>
+
 <div class="alert-center" id="alert-center"></div>
 
 <div id="app">
@@ -166,8 +186,11 @@ body { font-family: var(--font-body); background: var(--bg-base); color: var(--t
       <input type="text" id="search-input" placeholder="Rechercher une action..." disabled title="Utilisez la barre latérale pour économiser l'API">
     </div>
     <div class="topbar-actions">
-      <div class="theme-swatch active" data-t="dark" onclick="setTheme('dark')" title="Thème Sombre"></div>
-      <div class="theme-swatch" data-t="light" onclick="setTheme('light')" title="Thème Clair"></div>
+      <button class="topbar-btn" onclick="resetApiKey()" style="margin-right: 15px; border-color: var(--red); color: var(--red);">Changer Clé API</button>
+      <div style="display:flex; gap: 5px;">
+        <div class="theme-swatch active" data-t="dark" onclick="setTheme('dark')" title="Thème Sombre"></div>
+        <div class="theme-swatch" data-t="light" onclick="setTheme('light')" title="Thème Clair"></div>
+      </div>
     </div>
   </header>
 
@@ -240,12 +263,31 @@ body { font-family: var(--font-body); background: var(--bg-base); color: var(--t
 
 <script>
 // ============================================================
-// CONFIGURATION API
+// GESTION DE LA CLÉ API LOCALE SÉCURISÉE
 // ============================================================
-window.SM_CONFIG = {
-  // TA CLÉ TWELVE DATA INTÉGRÉE :
-  twelvedata: '4c6f52a4b2c644c6bdfb0e78d731c697' 
-};
+function checkApiKey() {
+  const key = localStorage.getItem('sm_twelvedata_key');
+  if (!key) {
+    document.getElementById('api-key-modal').classList.add('active');
+  } else {
+    loadIndexList('cac40');
+  }
+}
+
+function saveApiKey() {
+  const input = document.getElementById('api-key-input').value.trim();
+  if (input) {
+    localStorage.setItem('sm_twelvedata_key', input);
+    document.getElementById('api-key-modal').classList.remove('active');
+    showToast('✅', 'Clé enregistrée', 'Votre clé est sauvegardée localement.');
+    loadIndexList('cac40');
+  }
+}
+
+function resetApiKey() {
+  localStorage.removeItem('sm_twelvedata_key');
+  location.reload();
+}
 
 // ============================================================
 // BASE DE DONNÉES (Actions et Indices)
@@ -299,7 +341,6 @@ let chart = null, mainSeries = null;
 let currentSymbol = null;
 let currentInterval = '365';
 
-// Notifications
 function showToast(icon, title, text) {
   const center = document.getElementById('alert-center');
   const toast = document.createElement('div');
@@ -309,7 +350,6 @@ function showToast(icon, title, text) {
   setTimeout(() => toast.remove(), 4000);
 }
 
-// Changement de Thème
 function setTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
   document.querySelectorAll('.theme-swatch').forEach(s => s.classList.toggle('active', s.dataset.t === t));
@@ -322,7 +362,6 @@ function setTheme(t) {
   }
 }
 
-// Navigation par Onglets
 function switchTab(tab) {
   document.querySelectorAll('.nav-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tab));
@@ -336,7 +375,7 @@ function switchMarketTab(tab) {
 }
 
 // ============================================================
-// CACHE (Sauvegarde locale pendant 2 heures pour économiser l'API)
+// CACHE LOCAL
 // ============================================================
 const CACHE = {
   get(key) {
@@ -356,14 +395,13 @@ const CACHE = {
 };
 
 // ============================================================
-// LAZY LOADING (Affichage de la barre latérale SANS requêtes)
+// LAZY LOADING
 // ============================================================
 function loadIndexList(indexKey) {
   const list = document.getElementById('sidebar-list');
   const symbols = INDEX_DATA[indexKey] || [];
   
   list.innerHTML = symbols.map(s => {
-    // Petit raccourci visuel pour l'icône
     const abbr = s.ticker.replace(/[^a-zA-Z]/g, '').slice(0, 3).toUpperCase();
     return `
       <div class="market-item ${currentSymbol === s.ticker ? 'active' : ''}" 
@@ -374,7 +412,7 @@ function loadIndexList(indexKey) {
           <div class="market-item-name">${s.name}</div>
         </div>
         <div class="market-item-price" style="text-align: right;">
-          <span class="mip-price" style="color:var(--text-muted); font-size: 0.75rem;">Voir le graphe</span>
+          <span class="mip-price" style="color:var(--text-muted); font-size: 0.75rem;">Voir</span>
         </div>
       </div>
     `;
@@ -384,7 +422,7 @@ function loadIndexList(indexKey) {
 function switchIndex(val) { loadIndexList(val); }
 
 // ============================================================
-// MOTEUR GRAPHIQUE (TradingView)
+// MOTEUR GRAPHIQUE
 // ============================================================
 function initChart() {
   const container = document.getElementById('main-chart');
@@ -425,22 +463,24 @@ window.setInterval_ = function(val) {
 };
 
 // ============================================================
-// RÉCUPÉRATION DES DONNÉES (API Twelve Data)
+// RÉCUPÉRATION DES DONNÉES API (Correction de l'URL)
 // ============================================================
 async function fetchTwelveData(symbol, days) {
-  // Ajustement du symbole pour l'Europe (Twelve Data utilise parfois des suffixes spécifiques, mais gère bien la plupart)
+  const apiKey = localStorage.getItem('sm_twelvedata_key');
+  if (!apiKey) return null;
+
   let cleanSymbol = symbol;
-  let exchangeParam = '';
+  let extraParam = ''; // <-- LA CORRECTION EST ICI
   
+  // Utilisation de "country" au lieu de "exchange" pour éviter les espaces dans l'URL
   if (symbol.endsWith('.PA')) {
     cleanSymbol = symbol.replace('.PA', '');
-    exchangeParam = '&exchange=Euronext Paris';
+    extraParam = '&country=France';
   } else if (symbol.endsWith('.DE')) {
     cleanSymbol = symbol.replace('.DE', '');
-    exchangeParam = '&exchange=XETRA';
+    extraParam = '&country=Germany';
   }
 
-  // Ajustement de la résolution
   let interval = '1day';
   let outputsize = parseInt(days) || 365;
   if (outputsize <= 30) { interval = '1h'; outputsize = outputsize * 8; }
@@ -449,7 +489,8 @@ async function fetchTwelveData(symbol, days) {
   const cached = CACHE.get(cacheKey);
   if (cached) return cached;
 
-  const url = `https://api.twelvedata.com/time_series?symbol=${cleanSymbol}${exchangeParam}&interval=${interval}&outputsize=${outputsize}&apikey=${window.SM_CONFIG.twelvedata}`;
+  // L'URL est maintenant propre, sans espaces
+  const url = `https://api.twelvedata.com/time_series?symbol=${cleanSymbol}${extraParam}&interval=${interval}&outputsize=${outputsize}&apikey=${apiKey}`;
   
   try {
     const response = await fetch(url);
@@ -460,7 +501,6 @@ async function fetchTwelveData(symbol, days) {
       return null;
     }
 
-    // Twelve Data renvoie du plus récent au plus ancien, le graphique a besoin de l'inverse
     const formattedData = data.values.reverse().map(d => ({
       time: Math.floor(new Date(d.datetime).getTime() / 1000),
       open: parseFloat(d.open),
@@ -472,18 +512,17 @@ async function fetchTwelveData(symbol, days) {
     CACHE.set(cacheKey, formattedData);
     return formattedData;
   } catch(e) {
-    showToast('❌', 'Erreur de connexion', 'Impossible de joindre Twelve Data.');
+    showToast('❌', 'Erreur de connexion', 'Impossible de joindre l\'API.');
     return null;
   }
 }
 
 // ============================================================
-// LOGIQUE PRINCIPALE (Clic sur une action)
+// CLIC SUR UNE ACTION
 // ============================================================
 window.selectSymbol = async function(ticker, name) {
   currentSymbol = ticker;
   
-  // Met en surbrillance l'élément cliqué dans la liste
   document.querySelectorAll('.market-item').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.market-item').forEach(el => {
     if (el.querySelector('.market-item-ticker')?.textContent === ticker.split(/[./]/)[0]) el.classList.add('active');
@@ -491,15 +530,13 @@ window.selectSymbol = async function(ticker, name) {
 
   document.getElementById('csd-ticker').textContent = name;
   switchTab('chart');
-  showToast('🔄', 'Chargement...', `Récupération de ${name} via Twelve Data`);
+  showToast('🔄', 'Chargement...', `Récupération de ${name}`);
 
-  // Requête API
   const ohlcv = await fetchTwelveData(ticker, currentInterval);
   
   if (ohlcv && ohlcv.length > 0) {
     updateChart(ohlcv);
     
-    // Calcul de la variation pour l'affichage en haut
     const firstPrice = ohlcv[0].close;
     const lastPrice = ohlcv[ohlcv.length - 1].close;
     const changePct = ((lastPrice - firstPrice) / firstPrice) * 100;
@@ -517,19 +554,15 @@ window.selectSymbol = async function(ticker, name) {
     
     showToast('✅', 'Succès', `${name} chargé.`);
   } else {
-    // Si l'API échoue ou retourne vide
     document.getElementById('csd-price').textContent = "N/A";
     document.getElementById('csd-change').textContent = "";
   }
 };
 
 // ============================================================
-// DÉMARRAGE AUTOMATIQUE
+// DÉMARRAGE
 // ============================================================
-setTimeout(() => {
-  loadIndexList('cac40');
-  showToast('👋', 'Bienvenue !', 'Les données ne se chargent que lorsque vous cliquez sur une action.');
-}, 500);
+setTimeout(checkApiKey, 500);
 
 </script>
 </body>
