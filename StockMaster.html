@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StockMaster Pro — Analyse de Marchés Financiers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+
+<style>
+/* ============================================================
+   VARIABLES & THÈMES
+   ============================================================ */
+:root {
+  --font-display: 'Syne', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-body: 'Instrument Sans', sans-serif;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --transition: 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  --sidebar-width: 260px;
+  --sidebar-collapsed: 60px;
+  --topbar-height: 56px;
+  --panel-height: 340px;
+}
+
+/* === DARK PRO (Modifié pour meilleur contraste) === */
+[data-theme="dark"] {
+  --bg-base: #12161b;
+  --bg-surface: #1a1f26;
+  --bg-elevated: #222831;
+  --bg-hover: #2c3440;
+  --bg-active: #374151;
+  --bg-card: #1a1f26;
+  --border: #2c3440;
+  --border-subtle: #222831;
+  --border-accent: #3b82f6;
+  --text-primary: #f3f4f6;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --text-inverse: #0a0c0f;
+  --accent: #3b82f6;
+  --accent-glow: rgba(59, 130, 246, 0.2);
+  --accent-hover: #60a5fa;
+  --gold: #f59e0b;
+  --gold-glow: rgba(245, 158, 11, 0.2);
+  --green: #10b981;
+  --green-dim: rgba(16, 185, 129, 0.15);
+  --red: #ef4444;
+  --red-dim: rgba(239, 68, 68, 0.15);
+  --yellow: #f59e0b;
+  --purple: #8b5cf6;
+  --cyan: #06b6d4;
+  --orange: #f97316;
+  --scrollbar-bg: #12161b;
+  --scrollbar-thumb: #374151;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.6);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.7);
+  --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.3);
+  --chart-bg: #12161b;
+  --candle-up: #10b981;
+  --candle-down: #ef4444;
+  --grid-line: rgba(255,255,255,0.06);
+}
+
+/* === MIDNIGHT BLUE === */
+[data-theme="midnight"] {
+  --bg-base: #050810;
+  --bg-surface: #0a0e1a;
+  --bg-elevated: #0f1526;
+  --bg-hover: #141d30;
+  --bg-active: #1a2540;
+  --bg-card: #0c1020;
+  --border: #151e30;
+  --border-subtle: #0e1525;
+  --border-accent: #1e3060;
+  --text-primary: #dce8ff;
+  --text-secondary: #7090c0;
+  --text-muted: #3a5080;
+  --text-inverse: #050810;
+  --accent: #4d8fff;
+  --accent-glow: rgba(77, 143, 255, 0.18);
+  --accent-hover: #7aabff;
+  --gold: #ffd166;
+  --gold-glow: rgba(255, 209, 102, 0.15);
+  --green: #06d6a0;
+  --green-dim: rgba(6, 214, 160, 0.12);
+  --red: #ff6b6b;
+  --red-dim: rgba(255, 107, 107, 0.12);
+  --yellow: #ffd166;
+  --purple: #a78bfa;
+  --cyan: #22d3ee;
+  --orange: #fb923c;
+  --scrollbar-bg: #0a0e1a;
+  --scrollbar-thumb: #1e3060;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.5);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.6);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.7);
+  --shadow-glow: 0 0 24px rgba(77, 143, 255, 0.25);
+  --chart-bg: #060a12;
+  --candle-up: #06d6a0;
+  --candle-down: #ff6b6b;
+  --grid-line: rgba(77,143,255,0.04);
+}
+
+/* === SOLARIZED === */
+[data-theme="solarized"] {
+  --bg-base: #002b36;
+  --bg-surface: #073642;
+  --bg-elevated: #0d404e;
+  --bg-hover: #124a58;
+  --bg-active: #175564;
+  --bg-card: #073642;
+  --border: #0d404e;
+  --border-subtle: #0a3a46;
+  --border-accent: #1a6070;
+  --text-primary: #eee8d5;
+  --text-secondary: #93a1a1;
+  --text-muted: #586e75;
+  --text-inverse: #002b36;
+  --accent: #268bd2;
+  --accent-glow: rgba(38, 139, 210, 0.15);
+  --accent-hover: #4faae0;
+  --gold: #b58900;
+  --gold-glow: rgba(181, 137, 0, 0.15);
+  --green: #859900;
+  --green-dim: rgba(133, 153, 0, 0.15);
+  --red: #dc322f;
+  --red-dim: rgba(220, 50, 47, 0.15);
+  --yellow: #b58900;
+  --purple: #6c71c4;
+  --cyan: #2aa198;
+  --orange: #cb4b16;
+  --scrollbar-bg: #073642;
+  --scrollbar-thumb: #1a6070;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+  --shadow-glow: 0 0 20px rgba(38, 139, 210, 0.2);
+  --chart-bg: #00252f;
+  --candle-up: #859900;
+  --candle-down: #dc322f;
+  --grid-line: rgba(255,255,255,0.03);
+}
+
+/* === LIGHT === */
+[data-theme="light"] {
+  --bg-base: #f0f2f5;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f8f9fb;
+  --bg-hover: #eef1f6;
+  --bg-active: #e4e9f2;
+  --bg-card: #ffffff;
+  --border: #e2e8f0;
+  --border-subtle: #edf2f7;
+  --border-accent: #bfcfe8;
+  --text-primary: #1a202c;
+  --text-secondary: #4a5568;
+  --text-muted: #a0aec0;
+  --text-inverse: #ffffff;
+  --accent: #2563eb;
+  --accent-glow: rgba(37, 99, 235, 0.1);
+  --accent-hover: #1d4ed8;
+  --gold: #d97706;
+  --gold-glow: rgba(217, 119, 6, 0.1);
+  --green: #059669;
+  --green-dim: rgba(5, 150, 105, 0.08);
+  --red: #dc2626;
+  --red-dim: rgba(220, 38, 38, 0.08);
+  --yellow: #d97706;
+  --purple: #7c3aed;
+  --cyan: #0891b2;
+  --orange: #ea580c;
+  --scrollbar-bg: #f0f2f5;
+  --scrollbar-thumb: #bfcfe8;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.1);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.12);
+  --shadow-glow: 0 0 20px rgba(37, 99, 235, 0.15);
+  --chart-bg: #ffffff;
+  --candle-up: #059669;
+  --candle-down: #dc2626;
+  --grid-line: rgba(0,0,0,0.04);
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow: hidden;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-bg); }
+::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-accent); }
+
+/* ============================================================
+   LAYOUT PRINCIPAL
+   ============================================================ */
+#app {
+  display: grid;
+  grid-template-rows: var(--topbar-height) 1fr;
+  grid-template-columns: var(--sidebar-width) 1fr;
+  height: 100vh;
+  transition: grid-template-columns var(--transition-slow);
+}
+#app.sidebar-collapsed { grid-template-columns: var(--sidebar-collapsed) 1fr; }
+
+/* (J'ai condensé le CSS non-essentiel pour que tout tienne dans le bloc) */
+#topbar { grid-column: 1 / -1; grid-row: 1; display: flex; align-items: center; gap: 12px; padding: 0 16px; background: var(--bg-surface); border-bottom: 1px solid var(--border); z-index: 100; position: relative; }
+.topbar-logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.logo-icon { width: 32px; height: 32px; background: linear-gradient(135deg, var(--accent), var(--purple)); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: var(--shadow-glow); flex-shrink: 0; }
+.logo-text { font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; color: var(--text-primary); white-space: nowrap; }
+.logo-text span { color: var(--accent); }
+.topbar-divider { width: 1px; height: 28px; background: var(--border); flex-shrink: 0; }
+#search-bar { flex: 1; max-width: 480px; position: relative; }
+#search-input { width: 100%; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 7px 14px 7px 36px; color: var(--text-primary); font-family: var(--font-mono); font-size: 0.82rem; outline: none; }
+#search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+.search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 14px; pointer-events: none; }
+#search-results { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: var(--bg-elevated); border: 1px solid var(--border-accent); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); z-index: 200; display: none; overflow-y: auto; max-height: 360px; }
+#search-results.visible { display: block; }
+.search-result-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border-subtle); }
+.search-result-item:hover { background: var(--bg-hover); }
+.sri-ticker { font-family: var(--font-mono); font-weight: 600; font-size: 0.85rem; color: var(--accent); min-width: 60px; }
+.sri-name { font-size: 0.82rem; color: var(--text-secondary); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sri-market { font-size: 0.72rem; color: var(--text-muted); background: var(--bg-hover); padding: 2px 8px; border-radius: 20px; }
+#ticker-tape { flex: 1; overflow: hidden; position: relative; max-width: 600px; }
+.ticker-inner { display: flex; gap: 24px; animation: tickerScroll 40s linear infinite; white-space: nowrap; }
+.ticker-inner:hover { animation-play-state: paused; }
+@keyframes tickerScroll { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+.ticker-item { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: 0.75rem; cursor: pointer; }
+.ticker-symbol { color: var(--text-secondary); font-weight: 500; }
+.ticker-price { color: var(--text-primary); font-weight: 600; }
+.ticker-change.up { color: var(--green); }
+.ticker-change.down { color: var(--red); }
+.topbar-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; margin-left: auto; }
+.topbar-btn { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 6px 10px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.78rem; font-family: var(--font-body); display: flex; align-items: center; gap: 5px; }
+.topbar-btn:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-accent); }
+.topbar-btn.active { background: var(--accent-glow); color: var(--accent); border-color: var(--accent); }
+.market-badge { display: flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-family: var(--font-mono); font-weight: 600; border: 1px solid; }
+.market-badge.open { background: var(--green-dim); color: var(--green); border-color: rgba(16,185,129,0.25); }
+.market-badge.closed { background: var(--red-dim); color: var(--red); border-color: rgba(239,68,68,0.2); }
+.market-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.market-badge.open .market-dot { animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(0.8); } }
+
+#sidebar { grid-column: 1; grid-row: 2; background: var(--bg-surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; transition: width var(--transition-slow); position: relative; z-index: 50; }
+#sidebar.collapsed .sidebar-label, #sidebar.collapsed .sidebar-section-title, #sidebar.collapsed .sidebar-badge, #sidebar.collapsed .market-item-info { display: none; }
+#sidebar.collapsed { width: var(--sidebar-collapsed); }
+.sidebar-toggle { position: absolute; right: -12px; top: 20px; width: 24px; height: 24px; background: var(--bg-elevated); border: 1px solid var(--border-accent); border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 10px; z-index: 10; box-shadow: var(--shadow-sm); }
+.sidebar-toggle:hover { background: var(--accent); color: white; border-color: var(--accent); }
+.sidebar-market-tabs { display: flex; padding: 10px 8px 0; gap: 2px; flex-shrink: 0; }
+.smt-btn { flex: 1; padding: 6px 4px; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 0.72rem; font-family: var(--font-display); font-weight: 600; border-radius: var(--radius-sm); text-align: center; white-space: nowrap; }
+.smt-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
+.smt-btn.active { color: var(--accent); background: var(--accent-glow); }
+.sidebar-index-select { padding: 8px 10px; flex-shrink: 0; }
+.index-select { width: 100%; background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-primary); padding: 6px 10px; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 0.78rem; outline: none; cursor: pointer; }
+.sidebar-list { flex: 1; overflow-y: auto; padding: 4px 0; }
+.market-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; cursor: pointer; border-left: 2px solid transparent; position: relative; }
+.market-item:hover { background: var(--bg-hover); }
+.market-item.active { background: var(--bg-active); border-left-color: var(--accent); }
+.market-item-icon { width: 28px; height: 28px; background: var(--bg-elevated); border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 11px; font-family: var(--font-mono); font-weight: 700; color: var(--text-secondary); flex-shrink: 0; border: 1px solid var(--border-subtle); }
+.market-item.active .market-item-icon { background: var(--accent-glow); color: var(--accent); border-color: rgba(59,130,246,0.3); }
+.market-item-info { flex: 1; min-width: 0; }
+.market-item-ticker { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; color: var(--text-primary); }
+.market-item-name { font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.market-item-price { text-align: right; flex-shrink: 0; }
+.mip-price { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; color: var(--text-primary); display: block; }
+.mip-change { font-family: var(--font-mono); font-size: 0.7rem; font-weight: 500; }
+.mip-change.up { color: var(--green); }
+.mip-change.down { color: var(--red); }
+.sidebar-bottom { flex-shrink: 0; padding: 10px; border-top: 1px solid var(--border-subtle); }
+.sidebar-bottom-btn { width: 100%; background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.78rem; font-family: var(--font-body); display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 6px; }
+.sidebar-bottom-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+#main { grid-column: 2; grid-row: 2; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-base); }
+#sub-topbar { display: flex; align-items: center; gap: 0; padding: 0 16px; background: var(--bg-surface); border-bottom: 1px solid var(--border); height: 40px; flex-shrink: 0; overflow-x: auto; }
+.nav-tab { padding: 0 14px; height: 40px; display: flex; align-items: center; gap: 6px; background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--text-muted); cursor: pointer; font-family: var(--font-display); font-size: 0.78rem; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+.nav-tab:hover { color: var(--text-primary); }
+.nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+#content-area { flex: 1; overflow: hidden; position: relative; }
+.tab-panel { position: absolute; inset: 0; display: none; flex-direction: column; overflow: hidden; }
+.tab-panel.active { display: flex; }
+
+#chart-panel { display: flex; flex-direction: column; height: 100%; }
+#chart-toolbar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--bg-surface); border-bottom: 1px solid var(--border); flex-shrink: 0; flex-wrap: wrap; }
+.chart-symbol-display { display: flex; align-items: baseline; gap: 8px; flex-shrink: 0; }
+.csd-ticker { font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; color: var(--text-primary); }
+.csd-price { font-family: var(--font-mono); font-size: 1rem; font-weight: 600; color: var(--text-primary); }
+.csd-change { font-family: var(--font-mono); font-size: 0.82rem; font-weight: 500; }
+.csd-change.up { color: var(--green); }
+.csd-change.down { color: var(--red); }
+.toolbar-sep { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
+.interval-group { display: flex; gap: 2px; background: var(--bg-elevated); padding: 2px; border-radius: var(--radius-sm); flex-shrink: 0; }
+.interval-btn { padding: 4px 9px; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; border-radius: 4px; }
+.interval-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
+.interval-btn.active { background: var(--bg-active); color: var(--text-primary); }
+.chart-type-group { display: flex; gap: 2px; background: var(--bg-elevated); padding: 2px; border-radius: var(--radius-sm); flex-shrink: 0; }
+.chart-type-btn { padding: 4px 8px; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 13px; border-radius: 4px; }
+.chart-type-btn:hover { color: var(--text-primary); background: var(--bg-hover); }
+.chart-type-btn.active { background: var(--bg-active); color: var(--accent); }
+.indicator-btn { padding: 5px 10px; background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text-secondary); cursor: pointer; font-size: 0.78rem; border-radius: var(--radius-sm); display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+.indicator-btn:hover { border-color: var(--accent); color: var(--accent); }
+#chart-wrapper { flex: 1; position: relative; overflow: hidden; background: var(--chart-bg); display: flex; flex-direction: column; }
+#main-chart { width: 100%; height: 100%; flex: 1; min-height: 0; }
+.chart-overlay-info { position: absolute; top: 12px; left: 14px; display: flex; flex-direction: column; gap: 3px; z-index: 10; pointer-events: none; }
+.col-item { font-family: var(--font-mono); font-size: 0.72rem; color: var(--text-secondary); background: rgba(0,0,0,0.4); padding: 2px 8px; border-radius: 4px; backdrop-filter: blur(4px); }
+#volume-chart { height: 80px; background: var(--chart-bg); border-top: 1px solid var(--border-subtle); flex-shrink: 0; }
+.indicator-panel { height: 100px; background: var(--chart-bg); border-top: 1px solid var(--border-subtle); flex-shrink: 0; position: relative; }
+.indicator-panel-label { position: absolute; top: 6px; left: 10px; font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-muted); z-index: 5; }
+.indicator-panel-close { position: absolute; top: 4px; right: 8px; background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-size: 12px; z-index: 5; }
+.indicator-panel-close:hover { color: var(--red); }
+
+#info-bar { background: var(--bg-surface); border-bottom: 1px solid var(--border); padding: 8px 14px; display: flex; gap: 16px; align-items: center; flex-shrink: 0; overflow-x: auto; flex-wrap: nowrap; }
+#info-bar::-webkit-scrollbar { height: 3px; }
+.info-chip { display: flex; flex-direction: column; gap: 1px; flex-shrink: 0; padding: 4px 10px; background: var(--bg-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); min-width: 80px; }
+.ic-label { font-size: 0.62rem; color: var(--text-muted); font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.06em; }
+.ic-value { font-family: var(--font-mono); font-size: 0.82rem; font-weight: 600; color: var(--text-primary); }
+.ic-value.up { color: var(--green); }
+.ic-value.down { color: var(--red); }
+.ic-value.neutral { color: var(--yellow); }
+
+/* Divers & Utilitaires */
+.btn { padding: 7px 14px; border-radius: var(--radius-sm); cursor: pointer; font-size: 0.8rem; font-family: var(--font-display); font-weight: 700; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 5px; }
+.btn-primary { background: var(--accent); color: white; }
+.btn-secondary { background: var(--bg-elevated); border-color: var(--border); color: var(--text-secondary); }
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 0.68rem; font-family: var(--font-mono); font-weight: 700; }
+.badge-blue { background: var(--accent-glow); color: var(--accent); }
+.alert-center { position: fixed; top: 70px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 500; pointer-events: none; max-width: 320px; }
+.alert-toast { background: var(--bg-elevated); border: 1px solid var(--border-accent); border-radius: var(--radius-md); padding: 12px 14px; box-shadow: var(--shadow-lg); pointer-events: all; animation: slideInRight 0.3s ease; display: flex; gap: 10px; align-items: flex-start; }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+.at-icon { font-size: 18px; flex-shrink: 0; }
+.at-body { flex: 1; }
+.at-title { font-size: 0.8rem; font-weight: 600; color: var(--text-primary); }
+.at-text { font-size: 0.73rem; color: var(--text-secondary); }
+
+/* Dashboard & autres vues */
+#dashboard-panel, #news-panel, #heatmap-panel, #screener-panel, #watchlist-panel, #portfolio-panel { overflow-y: auto; padding: 12px; }
+.dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.dashboard-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; }
+.dc-title { font-family: var(--font-display); font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; }
+.world-index-card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; display: flex; flex-direction: column; cursor: pointer; }
+.wic-flag { font-size: 1.2rem; }
+.wic-name { font-size: 0.75rem; font-weight: 700; color: var(--text-primary); }
+.wic-value { font-family: var(--font-mono); font-size: 0.9rem; font-weight: 700; }
+.wic-change.up { color: var(--green); }
+.wic-change.down { color: var(--red); }
+
+/* Theme swatches */
+.theme-picker { display: flex; gap: 8px; align-items: center; }
+.theme-swatch { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; }
+.theme-swatch.active { border-color: var(--accent); }
+.theme-swatch[data-t="dark"] { background: #12161b; box-shadow: inset 0 0 0 3px #2c3440; }
+.theme-swatch[data-t="midnight"] { background: #050810; box-shadow: inset 0 0 0 3px #151e30; }
+.theme-swatch[data-t="solarized"] { background: #002b36; box-shadow: inset 0 0 0 3px #0d404e; }
+.theme-swatch[data-t="light"] { background: #f0f2f5; box-shadow: inset 0 0 0 3px #e2e8f0; }
+
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(6px); z-index: 1000; display: none; align-items: center; justify-content: center; }
+.modal-overlay.visible { display: flex; }
+.modal { background: var(--bg-elevated); border: 1px solid var(--border-accent); border-radius: var(--radius-xl); padding: 28px; width: 90%; max-width: 520px; max-height: 80vh; overflow-y: auto; }
+.modal-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+.modal-title { font-family: var(--font-display); font-size: 1.1rem; font-weight: 800; color: var(--text-primary); flex: 1; }
+.modal-close { background: var(--bg-hover); border: none; color: var(--text-secondary); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; }
+
+/* Indicateurs de la Partie 2 */
+.indicator-list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.indicator-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; }
+.indicator-item.active { border-color: var(--accent); background: var(--accent-glow); }
+.indicator-item-check { width: 14px; height: 14px; border: 1.5px solid var(--border-accent); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 9px; }
+.indicator-item.active .indicator-item-check { background: var(--accent); color: white; border-color: var(--accent); }
+.indicator-item-name { font-size: 0.78rem; font-family: var(--font-mono); color: var(--text-secondary); flex: 1; }
+.indicator-item-color { width: 8px; height: 8px; border-radius: 50%; }
+</style>
+</head>
+
+<body>
+
+<div class="alert-center" id="alert-center"></div>
+
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⚙️ Paramètres</div>
+      <button class="modal-close" onclick="closeModal('settings-modal')">✕</button>
+    </div>
+    <div id="settings-modal-content">
+      <div class="theme-picker" style="justify-content:flex-start;gap:10px;">
+        <div class="theme-swatch" data-t="dark"      title="Dark Pro"        onclick="setTheme('dark')"      style="width:36px;height:36px;"></div>
+        <div class="theme-swatch" data-t="midnight"  title="Midnight Blue"   onclick="setTheme('midnight')"  style="width:36px;height:36px;"></div>
+        <div class="theme-swatch" data-t="solarized" title="Solarized"       onclick="setTheme('solarized')" style="width:36px;height:36px;"></div>
+        <div class="theme-swatch" data-t="light"     title="Light"           onclick="setTheme('light')"     style="width:36px;height:36px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <header id="topbar">
+    <div class="topbar-logo">
+      <div class="logo-icon">📈</div>
+      <div class="logo-text">Stock<span>Master</span> Pro</div>
+    </div>
+    <div class="topbar-divider"></div>
+    <div id="search-bar">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Rechercher un titre..." autocomplete="off">
+      <div id="search-results"></div>
+    </div>
+    <div class="topbar-actions">
+      <div class="market-badge open" id="market-badge">
+        <span class="market-dot"></span>
+        <span id="market-status-text">MARCHÉS</span>
+      </div>
+      <div class="theme-picker">
+        <div class="theme-swatch active" data-t="dark" onclick="setTheme('dark')"></div>
+        <div class="theme-swatch" data-t="midnight" onclick="setTheme('midnight')"></div>
+        <div class="theme-swatch" data-t="light" onclick="setTheme('light')"></div>
+      </div>
+      <button class="topbar-btn" onclick="openModal('settings-modal')">⚙️ Param.</button>
+    </div>
+  </header>
+
+  <aside id="sidebar">
+    <div class="sidebar-market-tabs">
+      <button class="smt-btn active" onclick="switchMarketTab('stocks')" data-tab="stocks">📈 Actions</button>
+      <button class="smt-btn" onclick="switchMarketTab('crypto')" data-tab="crypto">₿ Crypto</button>
+    </div>
+    <div class="sidebar-index-select">
+      <select class="index-select" id="index-select" onchange="switchIndex(this.value)">
+        <option value="cac40">CAC 40</option>
+        <option value="dax40">DAX 40</option>
+        <option value="sp500">S&P 500</option>
+        <option value="nasdaq100">NASDAQ 100</option>
+        <option value="crypto">Crypto Top 15</option>
+      </select>
+    </div>
+    <div class="sidebar-list scrollable" id="sidebar-list">
+      </div>
+  </aside>
+
+  <main id="main">
+    <nav id="sub-topbar">
+      <button class="nav-tab active" data-tab="chart" onclick="switchTab('chart')">📈 Graphe</button>
+      <button class="nav-tab" data-tab="dashboard" onclick="switchTab('dashboard')">🌍 Dashboard</button>
+    </nav>
+
+    <div id="content-area">
+      <div class="tab-panel active" id="tab-chart">
+        <div id="chart-panel">
+          <div id="info-bar">
+            <div class="info-chip" data-char="price"><span class="ic-label">PRIX</span><span class="ic-value num-anim" id="ic-price">--</span></div>
+            <div class="info-chip" data-char="price"><span class="ic-label">VAR. %</span><span class="ic-value num-anim" id="ic-change">--</span></div>
+            <div class="info-chip" data-char="rsi"><span class="ic-label">RSI (14)</span><span class="ic-value num-anim" id="ic-rsi">--</span></div>
+            <div class="info-chip" data-char="trend"><span class="ic-label">TENDANCE</span><span class="ic-value" id="ic-trend">--</span></div>
+          </div>
+          <div id="chart-toolbar">
+            <div class="chart-symbol-display">
+              <span class="csd-ticker" id="csd-ticker">Sélectionnez un titre</span>
+              <span class="csd-price num-anim" id="csd-price"></span>
+              <span class="csd-change num-anim" id="csd-change"></span>
+            </div>
+            <div class="toolbar-sep"></div>
+            <div class="interval-group">
+              <button class="interval-btn" data-interval="30" onclick="setInterval_('30')">1M</button>
+              <button class="interval-btn" data-interval="90" onclick="setInterval_('90')">3M</button>
+              <button class="interval-btn active" data-interval="365" onclick="setInterval_('365')">1A</button>
+              <button class="interval-btn" data-interval="1825" onclick="setInterval_('1825')">5A</button>
+            </div>
+            <div class="toolbar-sep"></div>
+            <div class="chart-type-group">
+              <button class="chart-type-btn active" data-type="candlestick" onclick="setChartType('candlestick')" title="Chandeliers">🕯</button>
+              <button class="chart-type-btn" data-type="line" onclick="setChartType('line')" title="Ligne">∕</button>
+            </div>
+          </div>
+          <div id="chart-wrapper">
+            <div id="main-chart"></div>
+            <div class="chart-overlay-info" id="ohlcv-overlay">
+              <span class="col-item" id="ov-open">O: --</span>
+              <span class="col-item" id="ov-high">H: --</span>
+              <span class="col-item" id="ov-low">L: --</span>
+              <span class="col-item" id="ov-close">C: --</span>
+            </div>
+          </div>
+          <div id="volume-chart" style="display:none;"></div>
+          <div id="indicator-panels"></div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-dashboard">
+        <div id="dashboard-panel" class="scrollable">
+          <div class="dashboard-grid" id="dashboard-grid">
+            </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+// ============================================================
+// CONFIG & ÉTATS
+// ============================================================
+window.SM_CONFIG = {
+  finnhub: 'd6imb51r01qm7dc82uq0d6imb51r01qm7dc82uqg',
+  alphavantage: '2RL6CWYSCT9LJ6UJ',
+  polygon: 'f_jm_DY0tzfQNoMaAtzxQvXi8NACbgNo'
+};
+
+window.SM = {
+  currentSymbol: null, currentInterval: '365', currentChartType: 'candlestick',
+  theme: localStorage.getItem('sm_theme') || 'dark',
+  favorites: [],
+  activeIndicators: new Set(),
+};
+
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  SM.theme = t;
+  localStorage.setItem('sm_theme', t);
+  document.querySelectorAll('.theme-swatch').forEach(s => {
+    s.classList.toggle('active', s.dataset.t === t);
+  });
+  if (window.smChartInstance) window.smChartInstance.applyOptions({
+    layout: { background: { color: getComputedStyle(document.documentElement).getPropertyValue('--chart-bg').trim() } }
+  });
+}
+setTheme(SM.theme);
+
+function switchTab(tab) {
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + tab));
+  if (tab === 'dashboard') renderDashboard();
+}
+
+function openModal(id) { document.getElementById(id)?.classList.add('visible'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('visible'); }
+
+function showToast(icon, title, text, duration = 4000) {
+  const center = document.getElementById('alert-center');
+  const toast = document.createElement('div');
+  toast.className = 'alert-toast';
+  toast.innerHTML = `<span class="at-icon">${icon}</span><div class="at-body"><div class="at-title">${title}</div><div class="at-text">${text}</div></div>`;
+  center.appendChild(toast);
+  setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 300); }, duration);
+}
+
+// ============================================================
+// DONNÉES ET INDICES
+// ============================================================
+const INDEX_DATA = {
+  cac40: [
+    { ticker: 'AI.PA',  name: 'Air Liquide', sector: 'Chimie' },
+    { ticker: 'AIR.PA', name: 'Airbus', sector: 'Aérospatial' },
+    { ticker: 'ALO.PA', name: 'Alstom', sector: 'Transport' },
+    { ticker: 'BNP.PA', name: 'BNP Paribas', sector: 'Finance' },
+    { ticker: 'MC.PA',  name: 'LVMH', sector: 'Luxe' },
+    { ticker: 'OR.PA',  name: 'L\'Oréal', sector: 'Cosmétiques' },
+    { ticker: 'SAN.PA', name: 'Sanofi', sector: 'Santé' },
+    { ticker: 'TTE.PA', name: 'TotalEnergies', sector: 'Énergie' }
+  ],
+  dax40: [
+    { ticker: 'ADS.DE', name: 'Adidas', sector: 'Textile' },
+    { ticker: 'BMW.DE', name: 'BMW', sector: 'Auto' },
+    { ticker: 'SAP.DE', name: 'SAP', sector: 'Tech' }
+  ],
+  sp500: [
+    { ticker: 'AAPL', name: 'Apple', sector: 'Tech' },
+    { ticker: 'MSFT', name: 'Microsoft', sector: 'Tech' },
+    { ticker: 'GOOGL', name: 'Alphabet', sector: 'Tech' },
+    { ticker: 'AMZN', name: 'Amazon', sector: 'E-commerce' }
+  ],
+  crypto: [
+    { ticker: 'BTC-USD', name: 'Bitcoin', sector: 'Crypto' },
+    { ticker: 'ETH-USD', name: 'Ethereum', sector: 'Crypto' }
+  ]
+};
+
+const WORLD_INDICES = [
+  { ticker: '^FCHI', name: 'CAC 40', flag: '🇫🇷' },
+  { ticker: '^GSPC', name: 'S&P 500', flag: '🇺🇸' },
+  { ticker: 'BTC-USD', name: 'Bitcoin', flag: '₿' }
+];
+
+// ============================================================
+// CACHE API (Version agressive avec LocalStorage)
+// ============================================================
+const API_CACHE = {
+  TTL: 2 * 60 * 60 * 1000, // 2 heures (au lieu de 5 min)
+
+  get(key) {
+    try {
+      const cached = localStorage.getItem(key);
+      if (!cached) return null;
+      const parsed = JSON.parse(cached);
+      // Si la donnée est trop vieille, on la supprime
+      if (Date.now() - parsed.ts > this.TTL) { 
+        localStorage.removeItem(key); 
+        return null; 
+      }
+      return parsed.data;
+    } catch(e) { return null; }
+  },
+  set(key, val) {
+    try {
+      localStorage.setItem(key, JSON.stringify({ ts: Date.now(), data: val }));
+    } catch(e) { console.warn("Cache plein", e); }
+  }
+};
+
+async function finnhubGet(endpoint, params = {}) {
+  const cacheKey = 'fh:' + endpoint + JSON.stringify(params);
+  const cached = API_CACHE.get(cacheKey);
+  if (cached) return cached;
+  const url = new URL('https://finnhub.io/api/v1/' + endpoint);
+  url.searchParams.set('token', window.SM_CONFIG.finnhub);
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+  try {
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error('Finnhub HTTP ' + res.status);
+    const data = await res.json();
+    API_CACHE.set(cacheKey, data);
+    return data;
+  } catch(e) { return null; }
+}
+
+async function alphaGet(fn, params = {}) {
+  const cacheKey = 'av:' + fn + JSON.stringify(params);
+  const cached = API_CACHE.get(cacheKey);
+  if (cached) return cached;
+  const url = new URL('https://www.alphavantage.co/query');
+  url.searchParams.set('function', fn);
+  url.searchParams.set('apikey', window.SM_CONFIG.alphavantage);
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+  try {
+    const res = await fetch(url.toString());
+    if (!res.ok) throw new Error('AV HTTP ' + res.status);
+    const data = await res.json();
+    if (data['Note'] || data['Information']) {
+      showToast('⚠️', 'Limite API', 'Alpha Vantage : limite de requêtes atteinte (25/jour)');
+      return null;
+    }
+    API_CACHE.set(cacheKey, data);
+    return data;
+  } catch(e) { return null; }
+}
+
+async function fetchQuote(symbol) {
+  const data = await finnhubGet('quote', { symbol });
+  if (!data || !data.c) return null;
+  return { price: data.c, change: data.d, changePct: data.dp };
+}
+
+async function fetchOHLCV(symbol, days) {
+  const to = Math.floor(Date.now() / 1000);
+  const from = to - (days || 365) * 86400;
+  const data = await finnhubGet('stock/candle', { symbol: symbol, resolution: 'D', from, to });
+
+  if (data && data.s === 'ok' && data.t && data.t.length > 0) {
+    return data.t.map((time, i) => ({
+      time: time, open: data.o[i], high: data.h[i], low: data.l[i], close: data.c[i], volume: data.v[i]
+    }));
+  }
+  // Mock data si l'API lâche (pour éviter une interface vide)
+  return generateMockOHLCV(symbol, days || 365);
+}
+
+function generateMockOHLCV(symbol, days) {
+  showToast('⚠️', 'Mode hors-ligne', `${symbol} affiché avec des données de secours (API saturée)`);
+  const data = [];
+  let price = 100 + Math.random() * 400;
+  const now = Math.floor(Date.now() / 1000);
+  for (let i = days; i >= 0; i--) {
+    const time = now - i * 86400;
+    const change = (Math.random() - 0.48) * 0.03;
+    const open = price;
+    price *= (1 + change);
+    data.push({
+      time, open: parseFloat(open.toFixed(2)), high: parseFloat((Math.max(open, price) * 1.01).toFixed(2)),
+      low: parseFloat((Math.min(open, price) * 0.99).toFixed(2)), close: parseFloat(price.toFixed(2)), volume: 1000000
+    });
+  }
+  return data;
+}
+
+// ============================================================
+// LOAD INDEX LIST — SIDEBAR (Version Lazy Loading)
+// ============================================================
+async function loadIndexList(indexKey) {
+  const list = document.getElementById('sidebar-list');
+  if (!list) return;
+
+  let symbols = INDEX_DATA[indexKey] || [];
+  if (!symbols.length) {
+    list.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-muted);font-size:0.78rem;">Aucun titre dans cet indice.</div>`;
+    return;
+  }
+
+  // Rendu immédiat SANS appeler les APIs pour chaque action
+  list.innerHTML = symbols.map(s => {
+    const abbr = s.ticker.split('.')[0].slice(0, 4).toUpperCase();
+    return `
+      <div class="market-item ${SM.currentSymbol === s.ticker ? 'active' : ''}" 
+           onclick="selectSymbol('${s.ticker}', '${s.name.replace(/'/g,"\\'")}', '${s.sector}')">
+        <div class="market-item-icon">${abbr}</div>
+        <div class="market-item-info">
+          <div class="market-item-ticker">${s.ticker.split('.')[0]}</div>
+          <div class="market-item-name">${s.name}</div>
+        </div>
+        <div class="market-item-price">
+          <span class="mip-price" style="color:var(--text-muted); font-size: 0.7rem;">Cliquez</span>
+          <span class="mip-change" style="color:var(--text-muted); font-size: 0.65rem;">pour voir</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function switchIndex(val) { loadIndexList(val); }
+
+// ============================================================
+// DASHBOARD (Version allégée sans requêtes intensives)
+// ============================================================
+async function renderDashboard() {
+  const grid = document.getElementById('dashboard-grid');
+  if (!grid) return;
+
+  grid.innerHTML = `
+    <div class="dashboard-card" style="grid-column:1/-1;">
+      <div class="dc-title">🌍 Marchés mondiaux</div>
+      <div id="world-indices-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;">
+        ${WORLD_INDICES.map(() => `<div class="skeleton" style="height:70px;border-radius:8px;"></div>`).join('')}
+      </div>
+    </div>
+    <div class="dashboard-card">
+      <div class="dc-title">📈 Top Mouvements</div>
+      <div style="padding:15px; text-align:center; color:var(--text-muted); font-size:0.8rem;">
+        Scan automatique désactivé pour économiser vos quotas d'API.<br>Parcourez la liste à gauche manuellement.
+      </div>
+    </div>
+  `;
+
+  // Fetch world indices uniquement (3 requêtes)
+  const wQuotes = {};
+  await Promise.all(WORLD_INDICES.map(async idx => { wQuotes[idx.ticker] = await fetchQuote(idx.ticker); }));
+
+  const wiGrid = document.getElementById('world-indices-grid');
+  if (wiGrid) {
+    wiGrid.innerHTML = WORLD_INDICES.map(idx => {
+      const q = wQuotes[idx.ticker];
+      const price  = q ? q.price.toLocaleString('fr-FR', {maximumFractionDigits:2}) : '--';
+      const change = q ? q.changePct : null;
+      const chStr  = change != null ? (change >= 0 ? '+' : '') + change.toFixed(2) + '%' : '--';
+      const chCls  = change != null ? (change >= 0 ? 'up' : 'down') : '';
+      return `
+        <div class="world-index-card" onclick="selectSymbol('${idx.ticker}','${idx.name}','Indice')">
+          <span class="wic-flag">${idx.flag}</span>
+          <span class="wic-name">${idx.name}</span>
+          <span class="wic-value">${price}</span>
+          <span class="wic-change ${chCls}">${chStr}</span>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+// ============================================================
+// CHARTS & GRAPHIQUES (TradingView)
+// ============================================================
+let chart = null, mainSeries = null;
+
+function initMainChart() {
+  const container = document.getElementById('main-chart');
+  if (!container || chart) return;
+  const css = getComputedStyle(document.documentElement);
+  chart = LightweightCharts.createChart(container, {
+    width: container.clientWidth, height: container.clientHeight,
+    layout: { background: { type: 'solid', color: css.getPropertyValue('--chart-bg').trim() }, textColor: css.getPropertyValue('--text-muted').trim() },
+    grid: { vertLines: { color: css.getPropertyValue('--grid-line').trim() }, horzLines: { color: css.getPropertyValue('--grid-line').trim() } },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+    rightPriceScale: { borderColor: css.getPropertyValue('--border-subtle').trim() },
+    timeScale: { borderColor: css.getPropertyValue('--border-subtle').trim(), timeVisible: true },
+  });
+  window.smChartInstance = chart;
+
+  new ResizeObserver(() => chart.resize(container.clientWidth, container.clientHeight)).observe(container);
+
+  chart.subscribeCrosshairMove(param => {
+    if (!param || !param.time || !mainSeries) return;
+    const data = param.seriesData.get(mainSeries);
+    if (!data) return;
+    document.getElementById('ov-open').textContent  = `O: ${data.open?.toFixed(2) || '--'}`;
+    document.getElementById('ov-high').textContent  = `H: ${data.high?.toFixed(2) || '--'}`;
+    document.getElementById('ov-low').textContent   = `L: ${data.low?.toFixed(2)  || '--'}`;
+    document.getElementById('ov-close').textContent = `C: ${(data.close || data.value)?.toFixed(2) || '--'}`;
+  });
+}
+
+function setChartData(ohlcv, type) {
+  if (!chart) initMainChart();
+  if (mainSeries) chart.removeSeries(mainSeries);
+  const css = getComputedStyle(document.documentElement);
+  const upColor = css.getPropertyValue('--candle-up').trim();
+  const downColor = css.getPropertyValue('--candle-down').trim();
+
+  if (type === 'line') {
+    mainSeries = chart.addLineSeries({ color: css.getPropertyValue('--accent').trim(), lineWidth: 2 });
+    mainSeries.setData(ohlcv.map(d => ({ time: d.time, value: d.close })));
+  } else {
+    mainSeries = chart.addCandlestickSeries({ upColor, downColor, borderUpColor: upColor, borderDownColor: downColor, wickUpColor: upColor, wickDownColor: downColor });
+    mainSeries.setData(ohlcv.map(d => ({ time: d.time, open: d.open, high: d.high, low: d.low, close: d.close })));
+  }
+  chart.timeScale().fitContent();
+}
+
+window.setInterval_ = function(val) {
+  SM.currentInterval = val;
+  document.querySelectorAll('.interval-btn').forEach(b => b.classList.toggle('active', b.dataset.interval === val));
+  if (SM.currentSymbol) selectSymbol(SM.currentSymbol, '', '');
+};
+
+window.setChartType = function(type) {
+  SM.currentChartType = type;
+  document.querySelectorAll('.chart-type-btn').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+  if (window._lastOHLCV) setChartData(window._lastOHLCV, type);
+};
+
+// ============================================================
+// SÉLECTION D'UNE ACTION (LA MAGIE OPÈRE ICI)
+// ============================================================
+window.selectSymbol = async function(ticker, name, sector) {
+  SM.currentSymbol = ticker;
+  document.querySelectorAll('.market-item').forEach(el => el.classList.remove('active'));
+  
+  // Highlight in sidebar
+  document.querySelectorAll('.market-item').forEach(el => {
+    if (el.querySelector('.market-item-ticker')?.textContent === ticker.split('.')[0]) el.classList.add('active');
+  });
+
+  document.getElementById('csd-ticker').textContent = ticker.split('.')[0];
+  switchTab('chart');
+  showToast('🔄', 'Chargement', `${ticker} — récupération des données...`);
+
+  const days = parseInt(SM.currentInterval) || 365;
+  const [ohlcv, quote] = await Promise.all([
+    fetchOHLCV(ticker, days),
+    fetchQuote(ticker)
+  ]);
+
+  if (ohlcv && ohlcv.length > 0) {
+    window._lastOHLCV = ohlcv;
+    if (!chart) initMainChart();
+    setChartData(ohlcv, SM.currentChartType);
+  }
+
+  if (quote) {
+    document.getElementById('ic-price').textContent = quote.price.toFixed(2);
+    document.getElementById('csd-price').textContent = quote.price.toFixed(2);
+    
+    const changeStr = (quote.changePct >= 0 ? '+' : '') + quote.changePct?.toFixed(2) + '%';
+    const changeClass = quote.changePct >= 0 ? 'up' : 'down';
+    
+    document.getElementById('ic-change').textContent = changeStr;
+    document.getElementById('ic-change').className = `ic-value ${changeClass}`;
+    document.getElementById('csd-change').textContent = changeStr;
+    document.getElementById('csd-change').className = `csd-change ${changeClass}`;
+  }
+
+  showToast('✅', ticker, `${name || ticker} chargé`);
+};
+
+// ============================================================
+// INITIALISATION
+// ============================================================
+setTimeout(() => {
+  loadIndexList('cac40');
+  showToast('✅', 'StockMaster Pro', 'Prêt et optimisé pour vos quotas d\'API !');
+}, 500);
+
+</script>
+</body>
+</html>
